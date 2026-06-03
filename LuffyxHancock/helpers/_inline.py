@@ -175,7 +175,7 @@ class Inline:
             ],
             [
                 self.ikb(text=lang["help"], callback_data="help", style=ButtonStyle.SUCCESS),
-                self.ikb(text="ᴏᴡɴᴇʀ", url="https://t.me/Sanjixnamisama, style=ButtonStyle.SUCCESS),
+                self.ikb(text=lang["ᴏᴡɴᴇʀ"], url=config.OWNER_ID, style=ButtonStyle.SUCCESS),
             ],
             [
                 self.ikb(text=lang["support"], url=config.SUPPORT_CHAT, style=ButtonStyle.PRIMARY),
