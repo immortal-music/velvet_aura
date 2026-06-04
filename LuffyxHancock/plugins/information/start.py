@@ -1,4 +1,3 @@
-
 from pyrogram import enums, errors, filters, types
 
 from LuffyxHancock import app, config, db, lang
@@ -20,6 +19,7 @@ async def _help(_, m: types.Message):
             photo=config.START_IMG,  # Use same image as start command
             caption=m.lang["help_menu"],
             reply_markup=buttons.help_markup(m.lang),
+            parse_mode=enums.ParseMode.HTML,  # HTML format အလုပ်လုပ်ရန် ထည့်ရမည်
             quote=True,
         )
     except Exception:
@@ -27,6 +27,7 @@ async def _help(_, m: types.Message):
         await m.reply_text(
             text=m.lang["help_menu"],
             reply_markup=buttons.help_markup(m.lang),
+            parse_mode=enums.ParseMode.HTML,  # HTML format အလုပ်လုပ်ရန် ထည့်ရမည်
             quote=True,
         )
 
@@ -55,7 +56,10 @@ async def start(_, message: types.Message):
 
     # Check if user is blacklisted
     if message.from_user.id in app.bl_users and message.from_user.id not in db.notified:
-        return await message.reply_text(message.lang["bl_user_notify"])
+        return await message.reply_text(
+            message.lang["bl_user_notify"], 
+            parse_mode=enums.ParseMode.HTML
+        )
 
     # If /start help, show help menu
     if len(message.command) > 1 and message.command[1] == "help":
@@ -77,6 +81,7 @@ async def start(_, message: types.Message):
             photo=config.START_IMG,
             caption=_text,
             reply_markup=key,
+            parse_mode=enums.ParseMode.HTML,  # Custom Premium Emojis ပြသရန် အဓိကလိုအပ်ချက်
             quote=not private,
         )
     except errors.ChatSendPhotosForbidden:
@@ -84,6 +89,7 @@ async def start(_, message: types.Message):
         await message.reply_text(
             text=_text,
             reply_markup=key,
+            parse_mode=enums.ParseMode.HTML,  # Custom Premium Emojis ပြသရန် အဓိကလိုအပ်ချက်
             quote=not private,
         )
 
@@ -116,6 +122,9 @@ async def settings(_, message: types.Message):
     
     admin_only = await db.get_play_mode(message.chat.id)  # Get play mode setting
     _language = "en"
+    
+    # မှတ်ချက်- safe_text သို့မဟုတ် လက်ရှိသုံးထားတဲ့ helper function ထဲမှာ 
+    # parse_mode="HTML" default ပါပြီးသားဖြစ်ရပါမယ်။ မပါရင် inline ထဲမှာ ထည့်ပေးရပါမယ်။
     await utils.safe_text(
         message,
         message.lang["start_settings"].format(message.chat.title),
