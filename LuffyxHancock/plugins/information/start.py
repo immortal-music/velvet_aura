@@ -99,6 +99,7 @@ async def start(_, message: types.Message):
             caption=_text,
             reply_markup=key,
             quote=not private,
+            parse_mode=enums.ParseMode.HTML  # HTML format အသုံးပြုရန်
         )
     except errors.ChatSendPhotosForbidden:
         # If photos are not allowed, send text only
@@ -106,6 +107,7 @@ async def start(_, message: types.Message):
             text=_text,
             reply_markup=key,
             quote=not private,
+            parse_mode=enums.ParseMode.HTML  # HTML format အသုံးပြုရန်
         )
     except Exception as e:
         # အခြား Error များတက်ခဲ့လျှင် Bot မှ Message ပြန်ပို့ပေးရန်
