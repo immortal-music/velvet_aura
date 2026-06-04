@@ -78,16 +78,17 @@ async def start(_, message: types.Message):
 
     # Choose appropriate welcome message
     if private:
+        # Telegram HTML Format အတွက် <tg-emoji emoji-id="..."> ကို အသုံးပြုထားပါသည်။
         _text = f"""
-<emoji id="{PREMIUM_EMOJI_4}">☉</emoji> ʜᴇʏ ʙᴀʙʏ : {message.from_user.mention} <emoji id="{PREMIUM_EMOJI_1}">☉</emoji>
-<emoji id="{PREMIUM_EMOJI_5}">☉</emoji> ɪ ᴀᴍ {app.mention}, ʜᴇʀᴇ ᴛᴏ ᴘʀᴏᴠɪᴅᴇ ʏᴏᴜ ᴡɪᴛʜ ᴀ ꜱᴍᴏᴏᴛʜ ᴍᴜꜱɪᴄ ꜱᴛʀᴇᴀᴍɪɴɢ ᴇxᴘᴇʀɪᴇɴᴄᴇ <emoji id="{PREMIUM_EMOJI_2}">☉</emoji>.
+<tg-emoji emoji-id="{PREMIUM_EMOJI_4}">☉</tg-emoji> ʜᴇʏ ʙᴀʙʏ : <a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a> <tg-emoji emoji-id="{PREMIUM_EMOJI_1}">☉</tg-emoji>
+<tg-emoji emoji-id="{PREMIUM_EMOJI_5}">☉</tg-emoji> ɪ ᴀᴍ {app.mention}, ʜᴇʀᴇ ᴛᴏ ᴘʀᴏᴠɪᴅᴇ ʏᴏᴜ ᴡɪᴛʜ ᴀ ꜱᴍᴏᴏᴛʜ ᴍᴜꜱɪᴄ ꜱᴛʀᴇᴀᴍɪɴɢ ᴇxᴘᴇʀɪᴇɴᴄᴇ <tg-emoji emoji-id="{PREMIUM_EMOJI_2}">☉</tg-emoji>.
 
-<emoji id="{PREMIUM_EMOJI_6}">☉</emoji> ғᴇᴀᴛᴜʀᴇs
-<emoji id="{PREMIUM_EMOJI_7}">☉</emoji> ʜǫ ᴀᴜᴅɪᴏ : 320ᴋʙᴘs sᴛʀᴇᴀᴍɪɴɢ
-<emoji id="{PREMIUM_EMOJI_8}">☉</emoji> sᴛʀᴇᴀᴍ sᴜᴘᴘᴏʀᴛ : ᴀᴜᴅɪᴏ-ᴠɪᴅᴇᴏ
-<emoji id="{PREMIUM_EMOJI_9}">☉</emoji> 24-7 ᴜᴘᴛɪᴍᴇ : ᴇɴᴛᴇʀᴘʀɪsᴇ ʀᴇʟɪᴀʙɪʟɪᴛʏ
-<emoji id="{PREMIUM_EMOJI_10}">☉</emoji> ᴘʟᴀʏ ᴄᴏᴍᴍᴇɴᴛꜱ : ᴘʟᴀʏ, ᴠᴘʟᴀʏ 
-<emoji id="{PREMIUM_EMOJI_11}">☉</emoji> ʙᴀsᴇᴅ ᴏɴ : ʏᴏᴜᴛᴜʙᴇ ᴀᴘɪ"""
+<tg-emoji emoji-id="{PREMIUM_EMOJI_6}">☉</tg-emoji> ғᴇᴀᴛᴜʀᴇs
+<tg-emoji emoji-id="{PREMIUM_EMOJI_7}">☉</tg-emoji> ʜǫ ᴀᴜᴅɪᴏ : 320ᴋʙᴘs sᴛʀᴇᴀᴍɪɴɢ
+<tg-emoji emoji-id="{PREMIUM_EMOJI_8}">☉</tg-emoji> sᴛʀᴇᴀᴍ sᴜᴘᴘᴏʀᴛ : ᴀᴜᴅɪᴏ-ᴠɪᴅᴇᴏ
+<tg-emoji emoji-id="{PREMIUM_EMOJI_9}">☉</tg-emoji> 24-7 ᴜᴘᴛɪᴍᴇ : ᴇɴᴛᴇʀᴘʀɪsᴇ ʀᴇʟɪᴀʙɪʟɪᴛʏ
+<tg-emoji emoji-id="{PREMIUM_EMOJI_10}">☉</tg-emoji> ᴘʟᴀʏ ᴄᴏᴍᴍᴇɴᴛꜱ : ᴘʟᴀʏ, ᴠᴘʟᴀʏ 
+<tg-emoji emoji-id="{PREMIUM_EMOJI_11}">☉</tg-emoji> ʙᴀsᴇᴅ ᴏɴ : ʏᴏᴜᴛᴜʙᴇ ᴀᴘɪ"""
     else:
         _text = message.lang["start_gp"].format(app.name)
 
