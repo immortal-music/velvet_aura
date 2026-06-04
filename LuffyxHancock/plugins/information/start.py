@@ -1,4 +1,3 @@
-
 from pyrogram import enums, errors, filters, types
 
 from LuffyxHancock import app, config, db, lang
@@ -64,14 +63,36 @@ async def start(_, message: types.Message):
     # Determine if chat is private or group
     private = message.chat.type == enums.ChatType.PRIVATE
 
+    # Premium Emojis Configuration
+    PREMIUM_EMOJI_1 = "6120465303177533732" 
+    PREMIUM_EMOJI_2 = "6120591326107935086" 
+    PREMIUM_EMOJI_3 = "6120398056874582504"
+    PREMIUM_EMOJI_4 = "6205967094039709231"
+    PREMIUM_EMOJI_5 = "6206217069726271155"
+    PREMIUM_EMOJI_6 = "6204129896009042249"
+    PREMIUM_EMOJI_7 = "6206275004540126842"
+    PREMIUM_EMOJI_8 = "6205967094039709231"
+    PREMIUM_EMOJI_9 = "6206217069726271155"
+    PREMIUM_EMOJI_10 = "6204129896009042249"
+    PREMIUM_EMOJI_11 = "6206275004540126842"
+
     # Choose appropriate welcome message
-    _text = (
-        message.lang["start_pm"].format(message.from_user.first_name, app.name)
-        if private
-        else message.lang["start_gp"].format(app.name)
-    )
+    if private:
+        _text = f"""
+<emoji id="{PREMIUM_EMOJI_4}">☉</emoji> ʜᴇʏ ʙᴀʙʏ : {message.from_user.mention} <emoji id="{PREMIUM_EMOJI_1}">☉</emoji>
+<emoji id="{PREMIUM_EMOJI_5}">☉</emoji> ɪ ᴀᴍ {app.mention}, ʜᴇʀᴇ ᴛᴏ ᴘʀᴏᴠɪᴅᴇ ʏᴏᴜ ᴡɪᴛʜ ᴀ ꜱᴍᴏᴏᴛʜ ᴍᴜꜱɪᴄ ꜱᴛʀᴇᴀᴍɪɴɢ ᴇxᴘᴇʀɪᴇɴᴄᴇ <emoji id="{PREMIUM_EMOJI_2}">☉</emoji>.
+
+<emoji id="{PREMIUM_EMOJI_6}">☉</emoji> ғᴇᴀᴛᴜʀᴇs
+<emoji id="{PREMIUM_EMOJI_7}">☉</emoji> ʜǫ ᴀᴜᴅɪᴏ : 320ᴋʙᴘs sᴛʀᴇᴀᴍɪɴɢ
+<emoji id="{PREMIUM_EMOJI_8}">☉</emoji> sᴛʀᴇᴀᴍ sᴜᴘᴘᴏʀᴛ : ᴀᴜᴅɪᴏ-ᴠɪᴅᴇᴏ
+<emoji id="{PREMIUM_EMOJI_9}">☉</emoji> 24-7 ᴜᴘᴛɪᴍᴇ : ᴇɴᴛᴇʀᴘʀɪsᴇ ʀᴇʟɪᴀʙɪʟɪᴛʏ
+<emoji id="{PREMIUM_EMOJI_10}">☉</emoji> ᴘʟᴀʏ ᴄᴏᴍᴍᴇɴᴛꜱ : ᴘʟᴀʏ, ᴠᴘʟᴀʏ 
+<emoji id="{PREMIUM_EMOJI_11}">☉</emoji> ʙᴀsᴇᴅ ᴏɴ : ʏᴏᴜᴛᴜʙᴇ ᴀᴘɪ"""
+    else:
+        _text = message.lang["start_gp"].format(app.name)
 
     key = buttons.start_key(message.lang, private)
+    
     try:
         await message.reply_photo(
             photo=config.START_IMG,
@@ -146,3 +167,4 @@ async def _new_member(_, message: types.Message):
                 return  # Chat already in database
             # Add chat to database (log is sent from new_chat.py with photo)
             await db.add_chat(message.chat.id)
+
