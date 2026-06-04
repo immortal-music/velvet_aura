@@ -107,6 +107,13 @@ async def start(_, message: types.Message):
             reply_markup=key,
             quote=not private,
         )
+    except Exception as e:
+        # အခြား Error များတက်ခဲ့လျှင် Bot မှ Message ပြန်ပို့ပေးရန်
+        await message.reply_text(
+            text=f"⚠️ **Error Occurred:** `{e}`\n\n(သင်၏ `START_IMG` Link သို့မဟုတ် Premium Emoji Format မှားယွင်းနေနိုင်ပါသည်။)",
+            quote=True
+        )
+        print(f"Start Command Error: {e}")
 
     # For private chats, add user to database if new
     if private:
@@ -167,4 +174,3 @@ async def _new_member(_, message: types.Message):
                 return  # Chat already in database
             # Add chat to database (log is sent from new_chat.py with photo)
             await db.add_chat(message.chat.id)
-
