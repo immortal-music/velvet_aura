@@ -2,7 +2,7 @@ from pyrogram import enums, errors, filters, types
 
 from LuffyxHancock import app, config, db, lang
 from LuffyxHancock.helpers import buttons, utils
-
+import html
 
 @app.on_message(filters.command(["help"]) & filters.private & ~app.bl_users)
 @lang.language()
