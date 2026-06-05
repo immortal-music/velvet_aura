@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://graph.org/file/be5c742ef7ad0e11f18f8-60c136fbfa5c04d4db.jp" alt="˹ᴀʀᴛɪꜱᴛ ᴍᴜꜱɪᴄ˼" width="400"/>
+  <img src="https://graph.org/file/be5c742ef7ad0e11f18f8-60c136fbfa5c04d4db.jp" alt="𓆰𓏲 𝐒⃝ᴀꜱᴜᴋᴇ ℡𝛭꯭ᴜ꯭⃝ꜱ꯭ɪ꯭ᴄ꯭𓂃ֶꪳ 𓆩〭〬🦋𓆪ꪾ" width="400"/>
   
   # 🎵 𓆰𓏲 𝐒⃝ᴀꜱᴜᴋᴇ ℡𝛭꯭ᴜ꯭⃝ꜱ꯭ɪ꯭ᴄ꯭𓂃ֶꪳ 𓆩〭〬🦋𓆪ꪾ
 
