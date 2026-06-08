@@ -1,4 +1,3 @@
-
 import os
 import re
 import glob
@@ -21,6 +20,10 @@ class YouTube:
     def __init__(self):
         """Initialize YouTube handler with configuration and caching."""
         self.base = "https://www.youtube.com/watch?v="
+        
+        # ညီကို ဖန်တီးထားသော Cloudflare Proxy URL (IP Block ဖြေရှင်းရန်)
+        self.proxy_url = "https://velvet-aura-proxy.pyaesone5psp.workers.dev/"
+        
         self.cookies = []
         self.checked = False
         self.warned = False
@@ -48,6 +51,7 @@ class YouTube:
         # Log configuration
         logger.info("=" * 50)
         logger.info("📹 YouTube Handler Initialized")
+        logger.info("🌐 Proxy URL: Active")
         logger.info(f"🎵 API Priority: {'ENABLED' if self.enable_api else 'DISABLED'}")
         if self.enable_api:
             logger.info(f"🔗 API URL: {self.api_url}")
@@ -58,6 +62,14 @@ class YouTube:
                 logger.warning("⚠️ No API Key configured!")
         logger.info(f"🍪 Cookies Fallback: {'ENABLED' if self.enable_cookies_fallback else 'DISABLED'}")
         logger.info("=" * 50)
+
+    def _process_url(self, url: str) -> str:
+        """
+        မူရင်း YouTube URL ကို Proxy URL နှင့် ပေါင်းစပ်ပေးသော function
+        """
+        if url.startswith("http"):
+            return f"{self.proxy_url}{url}"
+        return url
 
     def _locate_download_file(self, video_id: str, video: bool = False) -> Optional[str]:
         """Locate any completed download file for a video id."""
@@ -168,13 +180,6 @@ class YouTube:
     async def download_via_api(self, link: str, video: bool = False) -> Optional[str]:
         """
         Download audio/video using ArtistBots API (Primary Method).
-        
-        Args:
-            link: YouTube URL or video ID
-            video: True for video download, False for audio download
-        
-        Returns:
-            Path to downloaded file or None if failed
         """
         if not self.enable_api:
             logger.debug("API is disabled in config")
@@ -297,19 +302,13 @@ class YouTube:
     async def download_via_cookies(self, video_id: str, video: bool = False) -> Optional[str]:
         """
         Download audio/video using yt-dlp with cookies (Fallback Method).
-        
-        Args:
-            video_id: YouTube video ID
-            video: True for video download, False for audio download
-        
-        Returns:
-            Path to downloaded file or None if failed
         """
         if not self.enable_cookies_fallback:
             logger.debug("Cookies fallback is disabled in config")
             return None
 
-        url = self.base + video_id
+        # မူရင်း URL အစား Proxy URL ဖြင့် ပေါင်းစပ်၍ ယူပါမည်
+        url = self._process_url(self.base + video_id)
         filename_pattern = f"downloads/{video_id}"
         
         # Check existing files
@@ -373,6 +372,8 @@ class YouTube:
                 "extractor_retries": 5,
                 "sleep_interval_requests": 1,
                 "extractor_args": {"youtube": {"player_client": ["android", "web"]}},
+                # yt-dlp ကနေ proxy request များကို အလိုအလျောက် သွားနိုင်ရန် proxy option ထည့်ပေးခြင်း
+                "proxy": self.proxy_url,
             }
 
             if video:
@@ -438,7 +439,7 @@ class YouTube:
                         except Exception:
                             pass
 
-            logger.info(f"🍪 [COOKIES FALLBACK] Downloading {video_id} with cookies...")
+            logger.info(f"🍪 [COOKIES FALLBACK] Downloading {video_id} with proxy & cookies...")
             result = await asyncio.to_thread(_download, ydl_opts_cookie)
             
             if result:
@@ -580,20 +581,10 @@ class YouTube:
     async def download(self, video_id: str, is_live: bool = False, video: bool = False) -> Optional[str]:
         """
         Download audio/video from YouTube.
-        
-        PRIORITY: API First → Cookies Fallback
-        
-        Args:
-            video_id: YouTube video ID
-            is_live: Whether it's a live stream
-            video: True for video download, False for audio download
-        
-        Returns:
-            Path to downloaded file or None if failed
         """
         # For live streams, only cookies method works
         if is_live:
-            logger.info(f"🔴 Live stream detected for {video_id}, using cookies method...")
+            logger.info(f"🔴 Live stream detected for {video_id}, using cookies & proxy method...")
             cookie = self.get_cookies()
             ydl_opts = {
                 "quiet": True,
@@ -605,12 +596,16 @@ class YouTube:
                 "extractor_retries": 5,
                 "sleep_interval_requests": 1,
                 "extractor_args": {"youtube": {"player_client": ["android", "web"]}},
+                # Live stream များအတွက်လည်း proxy အသုံးပြုရန်
+                "proxy": self.proxy_url,
             }
 
             def _extract_url():
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     try:
-                        info = ydl.extract_info(self.base + video_id, download=False)
+                        # Proxy url အသုံးပြု၍ extract လုပ်ခြင်း
+                        proxied_url = self._process_url(self.base + video_id)
+                        info = ydl.extract_info(proxied_url, download=False)
                         if not info:
                             return None
 
