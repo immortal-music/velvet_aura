@@ -2,24 +2,18 @@ import os
 import re
 import glob
 import asyncio
-import yt_dlp
-import random
+import aiohttp
 from dataclasses import replace
 from typing import Optional, Union
 
 from pyrogram import enums, types
 from py_yt import Playlist, VideosSearch
-from LuffyxHancock import logger
+from LuffyxHancock import config, logger
 from LuffyxHancock.helpers import Track, utils
 
 class YouTube:
     def __init__(self):
         self.base = "https://www.youtube.com/watch?v="
-        
-        # ညီကို့ရဲ့ Cloudflare Proxy URL ကို သတ်မှတ်ခြင်း
-        self.proxy_url = "https://velvet-aura-proxy.pyaesone5psp.workers.dev/"
-        
-        self.cookies_dir = "LuffyxHancock/cookies"
         self.search_cache = {}
         self._download_semaphore = asyncio.Semaphore(5)
 
@@ -30,24 +24,8 @@ class YouTube:
         )
 
         logger.info("=" * 50)
-        logger.info("📹 YouTube Handler Initialized (Optimized + Cloudflare Proxy)")
-        logger.info(f"🌐 Active Proxy: {self.proxy_url}")
+        logger.info("📹 YouTube Handler Initialized (API ONLY MODE - NO COOKIES)")
         logger.info("=" * 50)
-
-    def _process_url(self, url: str) -> str:
-        """မူရင်း YouTube URL ကို Proxy URL နှင့် ပေါင်းစပ်ရန်"""
-        if url.startswith("http"):
-            return f"{self.proxy_url}{url}"
-        return url
-
-    def get_cookies(self) -> Optional[str]:
-        """Cookies ဖိုင်များကို ရယူရန် (Bot Activity ကိုကျော်ရန် အလွန်အရေးကြီးပါသည်)"""
-        if os.path.exists(self.cookies_dir):
-            cookies = [f for f in os.listdir(self.cookies_dir) if f.endswith(".txt")]
-            if cookies:
-                return os.path.join(self.cookies_dir, random.choice(cookies))
-        logger.warning("⚠️ Cookies ဖိုင်များ မတွေ့ပါ။ Download ပြဿနာတက်နိုင်ပါသည်။")
-        return None
 
     def valid(self, url: str) -> bool:
         return bool(re.match(self.regex, url))
@@ -121,61 +99,65 @@ class YouTube:
             logger.error(f"Playlist extraction error: {e}")
             return []
 
+    async def get_download_link_via_api(self, video_id: str, video: bool) -> Optional[str]:
+        """Free Public API များကို အသုံးပြု၍ ဒေါင်းလုဒ် Link ရယူခြင်း"""
+        url = self.base + video_id
+        try:
+            # Cobalt API (No API Key Required) ကို အသုံးပြုခြင်း
+            api_url = "https://co.wuk.sh/api/json"
+            headers = {"Accept": "application/json", "Content-Type": "application/json"}
+            payload = {"url": url, "isAudioOnly": not video, "aFormat": "mp3"}
+
+            async with aiohttp.ClientSession() as session:
+                async with session.post(api_url, json=payload, headers=headers, timeout=20) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        return data.get("url")
+                    else:
+                        logger.error(f"API Error: HTTP {resp.status}")
+        except Exception as e:
+            logger.error(f"Free API failed: {e}")
+
+        return None
+
     async def download(self, video_id: str, is_live: bool = False, video: bool = False) -> Optional[str]:
-        """yt-dlp ကို အသုံးပြု၍ သီချင်း/ဗီဒီယို ဒေါင်းလုပ်ဆွဲရန် (Proxy နှင့် Bot Bypass ပါဝင်သည်)"""
+        """API မှတဆင့် သီချင်းများကို တိုက်ရိုက်ဒေါင်းလုဒ်ဆွဲခြင်း (Cookies/yt-dlp အသုံးမပြုပါ)"""
         url = self.base + video_id
         os.makedirs("downloads", exist_ok=True)
+        
+        file_ext = ".mp4" if video else ".mp3"
+        file_path = f"downloads/{video_id}{file_ext}"
 
-        # 1. အရင် ဒေါင်းလုပ်ဆွဲထားပြီးသား ရှိမရှိ စစ်ဆေးခြင်း
-        existing_files = glob.glob(f"downloads/{video_id}.*")
-        for f in existing_files:
-            if not f.endswith(('.part', '.temp')):
-                return f
+        # ဖိုင်ရှိပြီးသားဆို ပြန်သုံးမည်
+        if os.path.exists(file_path):
+            return file_path
 
         async with self._download_semaphore:
-            # Proxy URL ကို မူရင်း YouTube URL ၏ အရှေ့တွင် ကပ်ပေးခြင်း
-            proxied_url = self._process_url(url)
+            logger.info(f"🌐 API အသုံးပြု၍ ဒေါင်းလုပ်ဆွဲနေပါသည်... (No yt-dlp, No Cookies)")
+            
+            # 1. API မှတဆင့် ဒေါင်းလုဒ် Link ရယူခြင်း
+            download_url = await self.get_download_link_via_api(video_id, video)
 
-            # 2. Bot Activity (403 Error) ကို ကျော်လွှားရန် အရေးကြီးဆုံး Settings များ
-            ydl_opts = {
-                "outtmpl": "downloads/%(id)s.%(ext)s",
-                "quiet": True,
-                "no_warnings": True,
-                "noplaylist": True,
-                "nocheckcertificate": True,
-                "geo_bypass": True,
-                "cookiefile": self.get_cookies(), # Cookies မဖြစ်မနေ လိုအပ်ပါသည်
-                "extractor_args": {
-                    "youtube": {
-                        # Android နှင့် iOS ဖုန်းများအဖြစ် ဟန်ဆောင်ရန် (IP Block နှင့် Bot Detection အတွက် အထိရောက်ဆုံး)
-                        "player_client": ["android", "ios", "web"], 
-                    }
-                }
-            }
+            if not download_url:
+                logger.error("❌ API မှ Link မရရှိပါ။ (API ယာယီ ကျနေနိုင်ပါသည်)")
+                return None
 
-            if video:
-                ydl_opts.update({
-                    "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best",
-                    "merge_output_format": "mp4",
-                })
-            else:
-                ydl_opts.update({
-                    "format": "bestaudio/best",
-                })
-
-            def _process_download():
-                try:
-                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                        if is_live:
-                            # Live Stream ဖြစ်ပါက Proxy Link မှတဆင့် extract လုပ်မည်
-                            info = ydl.extract_info(proxied_url, download=False)
-                            return info.get("url") or info.get("manifest_url")
+            try:
+                # 2. ရလာသော Link အား Server ထဲသို့ ဒေါင်းလုဒ်ဆွဲခြင်း
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(download_url) as file_resp:
+                        if file_resp.status == 200:
+                            with open(file_path, "wb") as f:
+                                while True:
+                                    chunk = await file_resp.content.read(65536) # 64KB chunks
+                                    if not chunk:
+                                        break
+                                    f.write(chunk)
+                            logger.info(f"✅ Download complete via API: {file_path}")
+                            return file_path
                         else:
-                            # ပုံမှန် သီချင်း/ဗီဒီယို ဖြစ်ပါက Proxy မှတဆင့် ဒေါင်းလုပ်ဆွဲမည်
-                            info = ydl.extract_info(proxied_url, download=True)
-                            return ydl.prepare_filename(info)
-                except Exception as e:
-                    logger.error(f"❌ Download Failed for {video_id} via Proxy: {e}")
-                    return None
-
-            return await asyncio.to_thread(_process_download)
+                            logger.error(f"❌ File download failed: HTTP {file_resp.status}")
+                            return None
+            except Exception as e:
+                logger.error(f"❌ Exception during download: {e}")
+                return None
